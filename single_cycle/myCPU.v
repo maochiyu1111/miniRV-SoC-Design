@@ -7,27 +7,37 @@ module myCPU (
     input  wire         cpu_clk,
 
     // Interface to IROM
-    output wire [13:0]  inst_addr,
-    input  wire [31:0]  inst,
+    output wire [15:0]  inst_addr,
+    input  wire [31:0]  inst
     
-    // Interface to Bridge
+
+`ifdef RUN_TRACE
+    ,
+    // Interface to DRAM
+    output wire [31:0] ram_addr,
+    input  wire [31:0] ram_rdata,
+    output wire        ram_wen,
+    output wire [31:0] ram_wdata
+
+    // Debug Interface
+    output reg         debug_wb_have_inst,
+    output reg [31:0]  debug_wb_pc,
+    output reg         debug_wb_ena,
+    output reg [ 4:0]  debug_wb_reg,
+    output reg [31:0]  debug_wb_value
+
+`else
+    ,
+    //Interface to Bridge
     output wire [31:0]  Bus_addr,
     input  wire [31:0]  Bus_rdata,
     output wire         Bus_wen,
     output wire [31:0]  Bus_wdata
 
-`ifdef RUN_TRACE
-    ,// Debug Interface
-    output wire         debug_wb_have_inst,
-    output wire [31:0]  debug_wb_pc,
-    output              debug_wb_ena,
-    output wire [ 4:0]  debug_wb_reg,
-    output wire [31:0]  debug_wb_value
 `endif
 );
 
     // TODO: 完成你自己的单周期CPU设计
-    //
     wire [31:0] npc_out;
     wire [31:0] pc_out;
     wire [31:0] pc4;
@@ -55,12 +65,27 @@ module myCPU (
     wire [31:0] rD1;
     wire [31:0] rD2;
 
+`ifdef RUN_TRACE
     //dram interface
+    wire [31:0] rdo = ram_rdata;
+    assign ram_addr = ALU_C;
+    assign ram_wen = ram_we;
+    assign ram_wdata = rD2;
+
+
+    //irom interface
+    assign inst_addr = pc_out[17:2]; 
+
+`else 
+    //bridge interface
     wire [31:0] rdo = Bus_rdata;
     assign Bus_addr = ALU_C;
     assign Bus_wen = ram_we;
     assign Bus_wdata = rD2;
 
+    //irom interface
+    assign inst_addr = pc_out[15:2]; 
+`endif 
 
     PC pc_inst (
         .cpu_rst(cpu_rst),
@@ -90,6 +115,7 @@ module myCPU (
     // Instantiate the RF module
     RF rf_inst (
         .cpu_clk(cpu_clk),
+        .cpu_rst(cpu_rst),
         .rR1(rR1),
         .rR2(rR2),
         .wR(wR),
@@ -146,11 +172,13 @@ module myCPU (
 
 `ifdef RUN_TRACE
     // Debug Interface
-    assign debug_wb_have_inst = 1'b1 ;
-    assign debug_wb_pc        = pc_out ;
-    assign debug_wb_ena       = rf_we ;
-    assign debug_wb_reg       = inst[11:7] ;
-    assign debug_wb_value     = wD;
+    always @(posedge cpu_clk) begin
+        debug_wb_have_inst <= 1'b1 ;
+        debug_wb_pc        <= pc_out ;
+        debug_wb_ena       <= rf_we ;
+        debug_wb_reg       <= inst[11:7] ;
+        debug_wb_value     <= wD;
+    end
 `endif
 
 endmodule

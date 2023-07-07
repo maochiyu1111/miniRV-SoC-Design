@@ -4,8 +4,20 @@
 
 module miniRV_SoC (
     input  wire         fpga_rst,   // High active
-    input  wire         fpga_clk,
+    input  wire         fpga_clk
 
+
+
+`ifdef RUN_TRACE
+    ,// Debug Interface
+    output wire         debug_wb_have_inst, // 当前时钟周期是否有指令写回 (对单周期CPU，可在复位后恒置1)
+    output wire [31:0]  debug_wb_pc,        // 当前写回的指令的PC (若wb_have_inst=0，此项可为任意值)
+    output              debug_wb_ena,       // 指令写回时，寄存器堆的写使能 (若wb_have_inst=0，此项可为任意值)
+    output wire [ 4:0]  debug_wb_reg,       // 指令写回时，写入的寄存器号 (若wb_ena或wb_have_inst=0，此项可为任意值)
+    output wire [31:0]  debug_wb_value     // 指令写回时，写入寄存器的值 (若wb_ena或wb_have_inst=0，此项可为任意值)
+
+`else
+    ,//Peripherals Interface
     input  wire [23:0]  switch,
     input  wire [ 4:0]  button,
     output wire [ 7:0]  dig_en,
@@ -19,13 +31,7 @@ module miniRV_SoC (
     output wire         DN_DP,
     output wire [23:0]  led
 
-`ifdef RUN_TRACE
-    ,// Debug Interface
-    output wire         debug_wb_have_inst, // 当前时钟周期是否有指令写回 (对单周期CPU，可在复位后恒置1)
-    output wire [31:0]  debug_wb_pc,        // 当前写回的指令的PC (若wb_have_inst=0，此项可为任意值)
-    output              debug_wb_ena,       // 指令写回时，寄存器堆的写使能 (若wb_have_inst=0，此项可为任意值)
-    output wire [ 4:0]  debug_wb_reg,       // 指令写回时，写入的寄存器号 (若wb_ena或wb_have_inst=0，此项可为任意值)
-    output wire [31:0]  debug_wb_value      // 指令写回时，写入寄存器的值 (若wb_ena或wb_have_inst=0，此项可为任意值)
+
 `endif
 );
 
@@ -36,19 +42,30 @@ module miniRV_SoC (
     // Interface between CPU and IROM
 `ifdef RUN_TRACE
     wire [15:0] inst_addr;
+
 `else
     wire [13:0] inst_addr;
 `endif
     wire [31:0] inst;
 
-    // Interface between CPU and Bridge
+
+`ifdef RUN_TRACE
+    //DRAM for trace
+    wire [31:0] ram_addr;
+    wire        ram_wen;
+    wire [31:0] ram_rdata;
+    wire [31:0] ram_wdata;
+
+`else
+
+    //Interface between CPU and Bridge
     wire [31:0] Bus_rdata;
     wire [31:0] Bus_addr;
     wire        Bus_wen;
     wire [31:0] Bus_wdata;
     
-    // Interface between bridge and DRAM
-    // wire         rst_bridge2dram;
+    //Interface between bridge and DRAM
+    wire         rst_bridge2dram;
     wire         clk_bridge2dram;
     wire [31:0]  addr_bridge2dram;
     wire [31:0]  rdata_dram2bridge;
@@ -82,7 +99,7 @@ module miniRV_SoC (
     wire [31:0]  addr_bridge2btn;
     wire [31:0]  rdata_bridge2btn;
 
-    
+`endif 
 
     
 `ifdef RUN_TRACE
@@ -105,13 +122,9 @@ module miniRV_SoC (
 
         // Interface to IROM
         .inst_addr          (inst_addr),
-        .inst               (inst),
+        .inst               (inst)
 
-        // Interface to Bridge
-        .Bus_addr           (Bus_addr),
-        .Bus_rdata          (Bus_rdata),
-        .Bus_wen            (Bus_wen),
-        .Bus_wdata          (Bus_wdata)
+
 
 `ifdef RUN_TRACE
         ,// Debug Interface
@@ -119,7 +132,20 @@ module miniRV_SoC (
         .debug_wb_pc        (debug_wb_pc),
         .debug_wb_ena       (debug_wb_ena),
         .debug_wb_reg       (debug_wb_reg),
-        .debug_wb_value     (debug_wb_value)
+        .debug_wb_value     (debug_wb_value),
+
+        // Interface to DRAM
+        .ram_addr           (ram_addr),
+        .ram_rdata          (ram_rdata),
+        .ram_wen            (ram_wen),
+        .ram_wdata          (ram_wdata)
+
+`else
+        ,// Interface to Bridge
+        .Bus_addr           (Bus_addr),
+        .Bus_rdata          (Bus_rdata),
+        .Bus_wen            (Bus_wen),
+        .Bus_wdata          (Bus_wdata)
 `endif
     );
     
@@ -127,9 +153,19 @@ module miniRV_SoC (
         .a          (inst_addr),
         .spo        (inst)
     );
-    
+
+`ifdef RUN_TRACE
+    DRAM Mem_DRAM (
+        .clk        (cpu_clk),
+        .a          (ram_addr[17:2]),
+        .spo        (ram_rdata),
+        .we         (ram_wen),
+        .d          (ram_wdata)
+    );
+
+`else
     Bridge Bridge (       
-        // Interface to CPU
+        //Interface to CPU
         .rst_from_cpu       (fpga_rst),
         .clk_from_cpu       (cpu_clk),
         .addr_from_cpu      (Bus_addr),
@@ -137,15 +173,15 @@ module miniRV_SoC (
         .wdata_from_cpu     (Bus_wdata),
         .rdata_to_cpu       (Bus_rdata),
         
-        // Interface to DRAM
-        // .rst_to_dram    (rst_bridge2dram),
+        //Interface to DRAM
+        .rst_to_dram    (rst_bridge2dram),
         .clk_to_dram        (clk_bridge2dram),
         .addr_to_dram       (addr_bridge2dram),
         .rdata_from_dram    (rdata_dram2bridge),
         .wen_to_dram        (wen_bridge2dram),
         .wdata_to_dram      (wdata_bridge2dram),
         
-        // Interface to 7-seg digital LEDs
+        //Interface to 7-seg digital LEDs
         .rst_to_dig         (rst_bridge2dig),
         .clk_to_dig         (clk_bridge2dig),
         .addr_to_dig        (addr_bridge2dig),
@@ -182,7 +218,7 @@ module miniRV_SoC (
     );
     
     // TODO: 在此实例化你的外设I/O接口电路模块
-    //
-
+    //  
+`endif 
 
 endmodule

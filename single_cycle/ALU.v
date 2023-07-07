@@ -10,7 +10,7 @@ module ALU (
    output reg        ALU_F
 );
 
-wire [31:0] sub_result = A - B;
+reg [31:0] sub_result;
 
 always @(*) begin
    case (alu_op)
@@ -19,15 +19,16 @@ always @(*) begin
       `AND: ALU_C = A & B;
       `OR:  ALU_C = A | B;
       `XOR: ALU_C = A ^ B;
-      `SLL: ALU_C = A << B;
-      `SRL: ALU_C = A >> B;
-      `SRA: ALU_C = $signed(A) >>> B;
+      `SLL: ALU_C = A << B[4:0];
+      `SRL: ALU_C = A >> B[4:0];
+      `SRA: ALU_C = $signed(A) >>> B[4:0];
       default: ALU_C = 0;
    endcase
 end
 
 
 always @(*) begin
+   sub_result = A - B; 
    case (br_op)
       `BR_NONE:
          ALU_F = 1'b0;
@@ -37,7 +38,7 @@ always @(*) begin
          else
             ALU_F = 1'b0;
       `BR_BLT:
-         if (sub_result < 0)
+         if (sub_result[31] == 1)
             ALU_F = 1'b1;
          else
             ALU_F = 1'b0;
@@ -47,7 +48,7 @@ always @(*) begin
          else
             ALU_F = 1'b0;
       `BR_BGE:
-         if (sub_result >= 0)
+         if (sub_result[31] == 0)
             ALU_F = 1'b1;
          else
             ALU_F = 1'b0;

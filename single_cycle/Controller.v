@@ -64,7 +64,7 @@ module Controller (
  
          `OPCODE_JALR: ctrl_info = 16'b000_11_0_000_0_1_10_111;    //jarl
 
-         `OPCODE_S: ctrl_info = 16'b001_11_1_000_1_0_10_111;    //sw
+         `OPCODE_S: ctrl_info = 16'b001_00_1_000_1_0_10_111;    //sw
 
          `OPCODE_B: 
             case (funct3)
