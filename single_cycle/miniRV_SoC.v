@@ -91,13 +91,13 @@ module miniRV_SoC (
     wire         rst_bridge2sw;
     wire         clk_bridge2sw;
     wire [31:0]  addr_bridge2sw;
-    wire [31:0]  rdata_bridge2sw;
+    wire [31:0]  rdata_sw2bridge;
 
-    // Interface to buttons
+    //Interface to buttons
     wire         rst_bridge2btn;
     wire         clk_bridge2btn;
     wire [31:0]  addr_bridge2btn;
-    wire [31:0]  rdata_bridge2btn;
+    wire [31:0]  rdata_btn2bridge;
 
 `endif 
 
@@ -164,6 +164,7 @@ module miniRV_SoC (
     );
 
 `else
+
     Bridge Bridge (       
         //Interface to CPU
         .rst_from_cpu       (fpga_rst),
@@ -174,7 +175,7 @@ module miniRV_SoC (
         .rdata_to_cpu       (Bus_rdata),
         
         //Interface to DRAM
-        .rst_to_dram    (rst_bridge2dram),
+        //.rst_to_dram        (rst_bridge2dram),
         .clk_to_dram        (clk_bridge2dram),
         .addr_to_dram       (addr_bridge2dram),
         .rdata_from_dram    (rdata_dram2bridge),
@@ -199,13 +200,13 @@ module miniRV_SoC (
         .rst_to_sw          (rst_bridge2sw),
         .clk_to_sw          (clk_bridge2sw),
         .addr_to_sw         (addr_bridge2sw),
-        .rdata_from_sw      (rdata_bridge2sw),
+        .rdata_from_sw      (rdata_sw2bridge),
 
         // Interface to buttons
         .rst_to_btn         (rst_bridge2btn),
         .clk_to_btn         (clk_bridge2btn),
         .addr_to_btn        (addr_bridge2btn),
-        .rdata_from_btn     (rdata_bridge2btn)
+        .rdata_from_btn     (rdata_btn2bridge)
     );
 
 
@@ -218,7 +219,49 @@ module miniRV_SoC (
     );
     
     // TODO: 在此实例化你的外设I/O接口电路模块
-    //  
+    Digital_LEDs digital_leds_inst (
+        .rst        (rst_bridge2dig),
+        .clk        (clk_bridge2dig),
+        .addr       (addr_bridge2dig),
+        .wen        (wen_bridge2dig),
+        .wdata      (wdata_bridge2dig),
+        .dig_en     (dig_en),
+        .DN_A       (DN_A),
+        .DN_B       (DN_B),
+        .DN_C       (DN_C),
+        .DN_D       (DN_D),
+        .DN_E       (DN_E),
+        .DN_F       (DN_F),
+        .DN_G       (DN_G),
+        .DN_DP      (DN_DP)
+    ); 
+
+    LEDs leds_inst (
+        .rst        (rst_bridge2led),
+        .clk        (clk_bridge2led),
+        .addr       (addr_bridge2led),
+        .wen        (wen_bridge2led),
+        .wdata      (wdata_bridge2led),
+        .led        (led)
+    );
+
+    Switches switches_inst (
+        .rst        (rst_bridge2sw),
+        .clk        (clk_bridge2sw),
+        .addr       (addr_bridge2sw),
+        .rdata      (rdata_sw2bridge),
+        .switch     (switch)       
+    );
+
+    Buttons buttons_inst(
+        .rst        (rst_bridge2btn),
+        .clk        (clk_bridge2btn),
+        .addr       (addr_bridge2btn),
+        .rdata      (rdata_btn2bridge),
+        .button     (button)   
+    );
+
+
 `endif 
 
 endmodule

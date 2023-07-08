@@ -14,12 +14,12 @@ module RF (
 );
 
    reg [31:0] registers [31:0];   // 32 registers, each 32 bits wide
+   integer i;
 
-   always @(posedge cpu_clk or posedge cpu_rst) begin
+   always @(posedge cpu_clk) begin
       // Write data to register if write enable signal is high
       
       if (cpu_rst) begin
-         integer i;
          for (i = 0; i < 32; i = i + 1) begin
             registers[i] <= 0;
          end

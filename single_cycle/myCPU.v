@@ -17,7 +17,7 @@ module myCPU (
     output wire [31:0] ram_addr,
     input  wire [31:0] ram_rdata,
     output wire        ram_wen,
-    output wire [31:0] ram_wdata
+    output wire [31:0] ram_wdata,
 
     // Debug Interface
     output reg         debug_wb_have_inst,
