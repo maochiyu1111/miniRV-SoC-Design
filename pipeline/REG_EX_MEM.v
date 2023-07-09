@@ -23,9 +23,6 @@ module REG_EX_MEM (
    input wire [31:0] rD2_EX_out,
    output reg [31:0] rD2_MEM_in,
 
-   input wire ALU_F_EX_out,
-   output reg ALU_F_MEM_in,
-
    input wire [31:0] ALU_C_EX_out,
    output reg [31:0] ALU_C_MEM_in
 
@@ -104,16 +101,6 @@ module REG_EX_MEM (
       end
       else begin
          rD2_MEM_in <= rD2_EX_out;
-      end
-   end
-
-   // ALU_F
-   always @(posedge cpu_clk or posedge cpu_rst) begin
-      if (cpu_rst) begin
-         ALU_F_MEM_in <= 1'b0;
-      end
-      else begin
-         ALU_F_MEM_in <= ALU_F_EX_out;
       end
    end
 
