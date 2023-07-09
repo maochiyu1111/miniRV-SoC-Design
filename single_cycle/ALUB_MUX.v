@@ -1,6 +1,6 @@
 `include "defines.vh"
 module ALUB_MUX (
-   input wire [ 1:0] alub_sel,
+   input wire        alub_sel,
    input wire [31:0] rD2,
    input wire [31:0] ext,
 
