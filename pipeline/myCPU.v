@@ -170,6 +170,16 @@ module myCPU (
 
     wire [31:0] pc_MEM_out = pc_MEM_in;
     wire [31:0] pc_WB_in;
+
+    wire inst_valid_EX_in;
+    wire inst_valid_EX_out = inst_valid_EX_in;
+
+    wire inst_valid_MEM_in;
+    wire inst_valid_MEM_out = inst_valid_MEM_in;
+    
+    wire inst_valid_WB_in;
+
+
 `endif
 /* IF */
 
@@ -296,7 +306,9 @@ module myCPU (
 `ifdef RUN_TRACE
         ,
         .pc_ID_out(pc_ID_out),
-        .pc_EX_in(pc_EX_in)
+        .pc_EX_in(pc_EX_in),
+
+        .inst_valid_EX_in(inst_valid_EX_in)
 
 `endif
     );
@@ -352,7 +364,10 @@ module myCPU (
 `ifdef RUN_TRACE
     ,
     .pc_EX_out(pc_EX_out),
-    .pc_MEM_in(pc_MEM_in)
+    .pc_MEM_in(pc_MEM_in),
+
+    .inst_valid_EX_out(inst_valid_EX_out),
+    .inst_valid_MEM_in(inst_valid_MEM_in)
 
 `endif 
 
@@ -388,7 +403,10 @@ module myCPU (
 `ifdef RUN_TRACE
    ,
     .pc_MEM_out(pc_MEM_out),
-    .pc_WB_in(pc_WB_in)
+    .pc_WB_in(pc_WB_in),
+
+    .inst_valid_MEM_out(inst_valid_MEM_out),
+    .inst_valid_WB_in(inst_valid_WB_in)
 `endif 
 
 );
@@ -401,7 +419,7 @@ module myCPU (
 `ifdef RUN_TRACE
     // Debug Interface
     always @(posedge cpu_clk) begin
-        debug_wb_have_inst <= 1'b1 ;
+        debug_wb_have_inst <= inst_valid_WB_in ;
         debug_wb_pc        <= pc_WB_in ;
         debug_wb_ena       <= rf_we_WB_in ;
         debug_wb_reg       <= wR_WB_in ;
