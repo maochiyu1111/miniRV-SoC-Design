@@ -10,9 +10,20 @@ module Controller (
    output wire        alub_sel,
    output wire        rf_we,
    output wire [ 1:0] rf_wsel,
-   output wire [ 2:0] br_op
+   output wire [ 2:0] br_op,
+
+   //hazard
+   output wire        rR1_read,
+   output wire        rR2_read,
+   output wire        is_load,
+   output wire        is_B
    
 );
+
+   assign rR1_read = ~ ((opcode == `OPCODE_U) || (opcode == `OPCODE_J));
+   assign rR2_read = ((opcode == `OPCODE_B) || (opcode == `OPCODE_S) || (opcode == `OPCODE_R));
+   assign is_load = (opcode == `OPCODE_LW);
+   assign is_B = (opcode == `OPCODE_B);
 
    wire [6:0] opcode = inst[6:0];
    wire [2:0] funct3 = inst[14:12];
