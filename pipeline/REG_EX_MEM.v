@@ -29,7 +29,10 @@ module REG_EX_MEM (
 `ifdef RUN_TRACE
    ,// debug
    input wire [31:0] pc_EX_out,
-   output reg [31:0] pc_MEM_in
+   output reg [31:0] pc_MEM_in,
+
+   input wire inst_valid_EX_out,
+   output reg inst_valid_MEM_in
 
 `endif 
 );
@@ -124,6 +127,13 @@ module REG_EX_MEM (
       else begin
          pc_MEM_in <= pc_EX_out;
       end
+   end
+
+   always @(posedge cpu_clk or posedge cpu_rst) begin
+      if (cpu_rst)
+         inst_valid_MEM_in <= 1'b0;
+      else 
+         inst_valid_MEM_in <= inst_valid_EX_out;
    end
 
 `endif 

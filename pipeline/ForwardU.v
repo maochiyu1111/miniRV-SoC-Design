@@ -1,8 +1,6 @@
 `include "defines.vh"
 
 module ForwardU ( // forwarding unit
-   input wire cpu_rst,
-   input wire cpu_clk,
 
    //hazard signal
    input wire RAW_A_rR1,
@@ -13,7 +11,6 @@ module ForwardU ( // forwarding unit
 
    input wire RAW_C_rR1,
    input wire RAW_C_rR2,
-
 
    //write back data
    input wire [31:0] ALU_C_EX_out,  //RAW_A

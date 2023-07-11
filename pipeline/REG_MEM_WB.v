@@ -14,7 +14,10 @@ module REG_MEM_WB (
 `ifdef RUN_TRACE
    ,// debug
    input wire [31:0] pc_MEM_out,
-   output reg [31:0] pc_WB_in
+   output reg [31:0] pc_WB_in,
+
+   input wire inst_valid_MEM_out,
+   output reg inst_valid_WB_in
 
 `endif 
 );
@@ -64,6 +67,12 @@ module REG_MEM_WB (
       end
    end
 
+   always @(posedge cpu_clk or posedge cpu_rst) begin
+      if (cpu_rst)
+         inst_valid_WB_in <= 1'b0;
+      else 
+         inst_valid_WB_in <= inst_valid_MEM_out;
+   end
 `endif 
 
 endmodule //REG_MEM_WB

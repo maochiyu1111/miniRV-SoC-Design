@@ -37,7 +37,7 @@ module myCPU (
 `endif
 );
 
-    // TODO: 完成你自己的单周期CPU设计
+    //interface between functional parts
     wire [31:0] npc_IF_out;
     wire [31:0] pc_IF_out;
 
@@ -45,8 +45,6 @@ module myCPU (
     wire [1:0] npc_op_ID_out;
 
     wire alub_sel_ID_out;
-
-
     wire [24:0] sext_din_ID_in = inst_ID_in[31:7];
 
     wire [4:0] rR1_ID_in = inst_ID_in[19:15];
@@ -54,6 +52,26 @@ module myCPU (
     wire [4:0] wR_ID_in  = inst_ID_in[11:7];
 
     wire ALU_F_EX_out;
+
+    //controller to hazard
+    wire rR1_read;
+    wire rR2_read;
+    wire is_B;
+
+    //data hazard detection unit output 
+    wire RAW_A_rR1;
+    wire RAW_A_rR2;
+    wire RAW_B_rR1;
+    wire RAW_B_rR2;
+    wire RAW_C_rR1;
+    wire RAW_C_rR2;
+    wire nop;
+
+    // forwarding unit output
+    wire forward_en_rD1;
+    wire forward_en_rD2;
+    wire [31:0] forward_rD1;
+    wire [31:0] forward_rD2;
 
 
 `ifdef RUN_TRACE
@@ -86,7 +104,7 @@ module myCPU (
     
     wire [31:0] inst_ID_in;
 
-    // IF/EX
+    // ID/EX
     wire [31:0] ext_ID_out;
     wire [31:0] ext_EX_in;
 
@@ -119,6 +137,9 @@ module myCPU (
 
     wire [31:0] rD2_ID_out;
     wire [31:0] rD2_EX_in;
+
+    wire is_load_ID_out;
+    wire is_load_EX_in;
 
     // EX/MEM
     wire [31:0] ext_EX_out = ext_EX_in;
@@ -156,7 +177,6 @@ module myCPU (
 
     wire [31:0] wD_MEM_out;
     wire [31:0] wD_WB_in; 
-    
 
 `ifdef RUN_TRACE
 
@@ -171,22 +191,80 @@ module myCPU (
     wire [31:0] pc_MEM_out = pc_MEM_in;
     wire [31:0] pc_WB_in;
 
-    wire inst_valid_EX_in;
-    wire inst_valid_EX_out = inst_valid_EX_in;
+    wire inst_valid_ID_in;
 
+    wire inst_valid_ID_out = inst_valid_ID_in;
+    wire inst_valid_EX_in;
+
+    wire inst_valid_EX_out = inst_valid_EX_in;
     wire inst_valid_MEM_in;
+
     wire inst_valid_MEM_out = inst_valid_MEM_in;
-    
     wire inst_valid_WB_in;
 
 
 `endif
+
+/* 实例化 */
+
+    // data hazard detection unit 
+    DHDU data_hazard_detection_unit (
+        .is_load(is_load_EX_in),
+        .rR1_read(rR1_read),
+        .rR2_read(rR2_read),
+
+        .rR1_ID_in(rR1_ID_in),
+        .rR2_ID_in(rR2_ID_in),
+
+        .rf_we_EX_in(rf_we_EX_in),
+        .rf_we_MEM_in(rf_we_MEM_in),
+        .rf_we_WB_in(rf_we_WB_in),
+
+        .wR_EX_in(wR_EX_in),
+        .wR_MEM_in(wR_MEM_in),
+        .wR_WB_in(wR_WB_in),
+
+        .RAW_A_rR1(RAW_A_rR1),
+        .RAW_A_rR2(RAW_A_rR2),
+        .RAW_B_rR1(RAW_B_rR1),
+        .RAW_B_rR2(RAW_B_rR2),
+        .RAW_C_rR1(RAW_C_rR1),
+        .RAW_C_rR2(RAW_C_rR2),
+        .nop(nop)
+    );
+
+    //forwarding unit
+    ForwardU forwarding_unit (
+        .RAW_A_rR1(RAW_A_rR1),
+        .RAW_A_rR2(RAW_A_rR2),
+        .RAW_B_rR1(RAW_B_rR1),
+        .RAW_B_rR2(RAW_B_rR2),
+        .RAW_C_rR1(RAW_C_rR1),
+        .RAW_C_rR2(RAW_C_rR2),
+
+        .ALU_C_EX_out(ALU_C_EX_out),
+        .ext_EX_out(ext_EX_out),
+        .pc4_EX_out(pc4_EX_out),
+        .rf_wsel_EX_out(rf_wsel_EX_out),
+
+        .wD_MEM_out(wD_MEM_out),
+        .wD_WB_in(wD_WB_in),
+
+        .forward_en_rD1(forward_en_rD1),
+        .forward_en_rD2(forward_en_rD2),
+        .forward_rD1(forward_rD1),
+        .forward_rD2(forward_rD2)
+    );
+
+
+
 /* IF */
 
     PC pc_inst (
         .cpu_rst(cpu_rst),
         .cpu_clk(cpu_clk),
         .din(npc_IF_out),
+        .nop(nop),
         .pc(pc_IF_out)
     );
 
@@ -210,12 +288,16 @@ module myCPU (
         .pc4_ID_in(pc4_ID_in),
 
         .inst_IF_out(inst),
-        .inst_ID_in(inst_ID_in)
+        .inst_ID_in(inst_ID_in),
+
+        .nop(nop)
 
 `ifdef RUN_TRACE
         ,
         .pc_IF_out(pc_IF_out),
-        .pc_ID_in(pc_ID_in)
+        .pc_ID_in(pc_ID_in),
+
+        .inst_valid_ID_in(inst_valid_ID_in)
 
 `endif 
     );
@@ -245,7 +327,7 @@ module myCPU (
 
     // Instantiate the Controller module
     Controller controller_inst (
-        .inst(inst),
+        .inst(inst_ID_in),
         .sext_op(sext_op_ID_out),
         .npc_op(npc_op_ID_out),
         .ram_we(ram_we_ID_out),
@@ -253,7 +335,11 @@ module myCPU (
         .alub_sel(alub_sel_ID_out),
         .rf_we(rf_we_ID_out),
         .rf_wsel(rf_wsel_ID_out),
-        .br_op(br_op_ID_out)
+        .br_op(br_op_ID_out),
+        .rR1_read(rR1_read),
+        .rR2_read(rR2_read),
+        .is_load(is_load_ID_out),
+        .is_B(is_B)
     );
 
     // Instantiate the ALUB_MUX module
@@ -301,13 +387,25 @@ module myCPU (
         .B_EX_in(B_EX_in),
 
         .rD2_ID_out(rD2_ID_out),
-        .rD2_EX_in(rD2_EX_in)
+        .rD2_EX_in(rD2_EX_in),
+
+        .forward_en_rD1(forward_en_rD1),
+        .forward_en_rD2(forward_en_rD2),
+
+        .forward_rD1(forward_rD1),
+        .forward_rD2(forward_rD2),
+
+        .is_load_ID_out(is_load_ID_out),
+        .is_load_EX_in(is_load_EX_in),
+
+        .nop(nop)
 
 `ifdef RUN_TRACE
         ,
         .pc_ID_out(pc_ID_out),
         .pc_EX_in(pc_EX_in),
 
+        .inst_valid_ID_out(inst_valid_ID_out),
         .inst_valid_EX_in(inst_valid_EX_in)
 
 `endif
