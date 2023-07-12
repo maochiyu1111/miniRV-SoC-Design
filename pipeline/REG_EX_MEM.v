@@ -24,13 +24,13 @@ module REG_EX_MEM (
    output reg [31:0] rD2_MEM_in,
 
    input wire [31:0] ALU_C_EX_out,
-   output reg [31:0] ALU_C_MEM_in
+   output reg [31:0] ALU_C_MEM_in,
+
+   input wire [31:0] pc_EX_out,
+   output reg [31:0] pc_MEM_in
 
 `ifdef RUN_TRACE
    ,// debug
-   input wire [31:0] pc_EX_out,
-   output reg [31:0] pc_MEM_in,
-
    input wire inst_valid_EX_out,
    output reg inst_valid_MEM_in
 
@@ -117,8 +117,6 @@ module REG_EX_MEM (
       end
    end
 
-
-`ifdef RUN_TRACE
    // pc
    always @(posedge cpu_clk or posedge cpu_rst) begin
       if (cpu_rst) begin
@@ -128,6 +126,8 @@ module REG_EX_MEM (
          pc_MEM_in <= pc_EX_out;
       end
    end
+
+`ifdef RUN_TRACE
 
    always @(posedge cpu_clk or posedge cpu_rst) begin
       if (cpu_rst)

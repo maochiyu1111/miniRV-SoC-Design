@@ -8,13 +8,15 @@ module REG_IF_ID (
    input wire [31:0] inst_IF_out,
    output reg [31:0] inst_ID_in,
 
-   input wire nop
-
-`ifdef RUN_TRACE
-   ,// debug
    input wire [31:0] pc_IF_out,
    output reg [31:0] pc_ID_in,
 
+   input wire nop_data,
+   input wire Flush_B,
+   input wire Flush_jump
+
+`ifdef RUN_TRACE
+   ,// debug
    output reg inst_valid_ID_in
 
 `endif 
@@ -24,46 +26,46 @@ module REG_IF_ID (
    always @(posedge cpu_clk or posedge cpu_rst ) begin
       if (cpu_rst) 
          pc4_ID_in <= 32'h0;
-      else if (nop) 
+      else if (Flush_B || Flush_jump) 
+         pc4_ID_in <= 32'h0;
+      else if (nop_data) 
          pc4_ID_in <= pc4_ID_in;
       else 
          pc4_ID_in <= pc4_IF_out;
    end
 
-//inst
+   //inst
    always @(posedge cpu_clk or posedge cpu_rst) begin
       if (cpu_rst)
          inst_ID_in <= 32'h0;
-      else if (nop)
+      else if (Flush_B || Flush_jump) 
+         inst_ID_in <= 32'h0;
+      else if (nop_data)
          inst_ID_in <= inst_ID_in;
       else
          inst_ID_in <= inst_IF_out;
    end
 
-`ifdef RUN_TRACE
    //pc
    always @(posedge cpu_clk or posedge cpu_rst) begin
       if (cpu_rst)
          pc_ID_in <= 32'h0;
-      else if (nop)
+      else if (Flush_B || Flush_jump)
+         pc_ID_in <= 32'h0;
+      else if (nop_data)
          pc_ID_in <= pc_ID_in;
       else
          pc_ID_in <= pc_IF_out;
-   end
+   end   
 
-   // reg flag;
-   // always @(posedge cpu_clk or posedge cpu_rst) begin
-   //    if (cpu_rst)
-   //       flag <= 1'b0;
-   //    else 
-   //       flag <= 1'b1;
-   // end   
-
+`ifdef RUN_TRACE
 
    always @(posedge cpu_clk or posedge cpu_rst) begin
       if (cpu_rst)
          inst_valid_ID_in <= 1'b0;
-      else 
+      else if (Flush_B || Flush_jump)
+         inst_valid_ID_in <= 1'b0;
+      else
          inst_valid_ID_in <= 1'b1;
    end
 `endif

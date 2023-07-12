@@ -4,7 +4,7 @@ module Controller (
    input  wire [31:0] inst,
 
    output wire [ 2:0] sext_op,
-   output wire [ 1:0] npc_op,
+   // output wire [ 1:0] npc_op,
    output wire        ram_we,
    output wire [ 2:0] alu_op,
    output wire        alub_sel,
@@ -16,7 +16,9 @@ module Controller (
    output wire        rR1_read,
    output wire        rR2_read,
    output wire        is_load,
-   output wire        is_B
+   output wire        is_B,
+   output wire        is_jal,
+   output wire        is_jalr
    
 );
 
@@ -24,6 +26,8 @@ module Controller (
    assign rR2_read = ((opcode == `OPCODE_B) || (opcode == `OPCODE_S) || (opcode == `OPCODE_R));
    assign is_load = (opcode == `OPCODE_LW);
    assign is_B = (opcode == `OPCODE_B);
+   assign is_jal = (opcode == `OPCODE_J);
+   assign is_jalr = (opcode == `OPCODE_JALR);
 
    wire [6:0] opcode = inst[6:0];
    wire [2:0] funct3 = inst[14:12];
@@ -96,7 +100,7 @@ module Controller (
    end
 
    assign sext_op  = ctrl_info[15:13];
-   assign npc_op   = ctrl_info[12:11];
+   // assign npc_op   = ctrl_info[12:11];
    assign ram_we   = ctrl_info[10];
    assign alu_op   = ctrl_info[9:7];
    assign alub_sel = ctrl_info[6];

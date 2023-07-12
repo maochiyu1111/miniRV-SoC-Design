@@ -1,6 +1,6 @@
 module DHDU (  //Data Hazard Detection Unit
 
-   input wire is_load,    // signal from controller
+   input wire is_load,    // signal from EX
 
    input wire rR1_read,
    input wire rR2_read,
@@ -26,7 +26,7 @@ module DHDU (  //Data Hazard Detection Unit
    output wire RAW_C_rR1,
    output wire RAW_C_rR2,
 
-   output wire nop
+   output wire nop_data
 
 );
    wire load_use_hazard;
@@ -42,7 +42,7 @@ module DHDU (  //Data Hazard Detection Unit
 
    assign load_use_hazard = is_load && (RAW_A_rR1 || RAW_A_rR2); //load-use hazard deteced 
 
-   assign nop = load_use_hazard;
+   assign nop_data = load_use_hazard;
 
 
 endmodule //DHDU

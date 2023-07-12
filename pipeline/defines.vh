@@ -1,12 +1,10 @@
 // Annotate this macro before synthesis
-// `define RUN_TRACE
+`define RUN_TRACE
 
 // TODO: 在此处定义你的宏
 // npc_op
-`define NPC_PC4   2'b00
-`define NPC_JAL   2'b01
-`define NPC_BR    2'b10
-`define NPC_JALR  2'b11
+`define NPC_PC4   2'b0
+`define NPC_new   2'b1
 
 // sext_op
 `define IMM_I   3'b000
@@ -62,3 +60,10 @@
 `define PERI_ADDR_LED   32'hFFFF_F060
 `define PERI_ADDR_SW    32'hFFFF_F070
 `define PERI_ADDR_BTN   32'hFFFF_F078
+
+//br_prediction
+`define  STRONGLY_TAKEN       2'b11
+`define  WEAKLY_TAKEN         2'b10
+`define  WEAKLY_NOT_TAKEN     2'b01
+`define  STRONGLY_NOT_TAKEN   2'b00
+
