@@ -1,4 +1,4 @@
-module JumpDU ( 
+module JumpDU (    //jump detection unit
    input wire is_jal,
    input wire is_jalr,
 

@@ -36,78 +36,6 @@ module myCPU (
 
 `endif
 );
-
-    //interface between functional parts
-    wire [31:0] npc_IF_out;
-    wire [31:0] pc_IF_out;
-
-    wire [2:0] sext_op_ID_out;
-    wire [31:0] B_EX_out;
-    //wire [1:0] npc_op_ID_out;
-
-    wire [24:0] sext_din_ID_in = inst_ID_in[31:7];
-
-    wire [4:0] rR1_ID_in = inst_ID_in[19:15];
-    wire [4:0] rR2_ID_in = inst_ID_in[24:20];
-    wire [4:0] wR_ID_in  = inst_ID_in[11:7];
-
-    wire ALU_F_EX_out;
-
-    //controller to data hazard
-    wire rR1_read;
-    wire rR2_read;
-
-    //data hazard detection unit output 
-    wire RAW_A_rR1;
-    wire RAW_A_rR2;
-    wire RAW_B_rR1;
-    wire RAW_B_rR2;
-    wire RAW_C_rR1;
-    wire RAW_C_rR2;
-    wire nop_data;
-
-    // forwarding unit output
-    wire forward_en_rD1;
-    wire forward_en_rD2;
-    wire [31:0] forward_rD1;
-    wire [31:0] forward_rD2;
-
-    // control hazard
-    wire pre_br;
-    wire [31:0] br_pc;
-    wire Flush_B;
-
-    //jump related
-    wire Flush_jump;
-    wire B_jump;
-
-    //NPCsel to NPC
-    wire npc_op;
-    wire [31:0] new_pc;
-
-
-`ifdef RUN_TRACE
-    //dram interface
-    wire [31:0] rdo_MEM_out = ram_rdata;
-    assign ram_addr = ALU_C_MEM_in;
-    assign ram_wen = ram_we_MEM_in;
-    assign ram_wdata = rD2_MEM_in;
-
-
-    //irom interface
-    assign inst_addr = pc_IF_out[17:2]; 
-
-`else 
-    //bridge interface
-    wire [31:0] rdo_MEM_out = Bus_rdata;
-    assign Bus_addr = ALU_C_MEM_in;
-    assign Bus_wen = ram_we_MEM_in;
-    assign Bus_wdata = rD2_MEM_in;
-
-    //irom interface
-    assign inst_addr = pc_IF_out[17:2]; 
-`endif 
-
 /*  pipeline registers interface  */
 
     // IF/ID
@@ -225,7 +153,81 @@ module myCPU (
 
 `endif
 
-/* 实例化 */
+    //interface between functional parts
+    wire [31:0] npc_IF_out;
+    wire [31:0] pc_IF_out;
+
+    wire [2:0] sext_op_ID_out;
+    wire [31:0] B_EX_out;
+    //wire [1:0] npc_op_ID_out;
+
+    wire [24:0] sext_din_ID_in = inst_ID_in[31:7];
+
+    wire [4:0] rR1_ID_in = inst_ID_in[19:15];
+    wire [4:0] rR2_ID_in = inst_ID_in[24:20];
+    wire [4:0] wR_ID_in  = inst_ID_in[11:7];
+
+    wire ALU_F_EX_out;
+
+    //controller to data hazard
+    wire rR1_read;
+    wire rR2_read;
+
+    //data hazard detection unit output 
+    wire RAW_A_rR1;
+    wire RAW_A_rR2;
+    wire RAW_B_rR1;
+    wire RAW_B_rR2;
+    wire RAW_C_rR1;
+    wire RAW_C_rR2;
+    wire nop_data;
+
+    // forwarding unit output
+    wire forward_en_rD1;
+    wire forward_en_rD2;
+    wire [31:0] forward_rD1;
+    wire [31:0] forward_rD2;
+
+    // control hazard
+    wire pre_br;
+    wire [31:0] br_pc;
+    wire Flush_B;
+
+    //jump related
+    wire is_jal;
+    wire is_jalr;
+    wire Flush_jump;
+    wire B_jump;
+
+    //NPCsel to NPC
+    wire npc_op;
+    wire [31:0] new_pc;
+
+
+`ifdef RUN_TRACE
+    //dram interface
+    wire [31:0] rdo_MEM_out = ram_rdata;
+    assign ram_addr = ALU_C_MEM_in;
+    assign ram_wen = ram_we_MEM_in;
+    assign ram_wdata = rD2_MEM_in;
+
+
+    //irom interface
+    assign inst_addr = pc_IF_out[17:2]; 
+
+`else 
+    //bridge interface
+    wire [31:0] rdo_MEM_out = Bus_rdata;
+    assign Bus_addr = ALU_C_MEM_in;
+    assign Bus_wen = ram_we_MEM_in;
+    assign Bus_wdata = rD2_MEM_in;
+
+    //irom interface
+    assign inst_addr = pc_IF_out[17:2]; 
+`endif 
+
+
+/* 实例�? */
 
     // data hazard detection unit 
     DHDU data_hazard_detection_unit (
@@ -278,7 +280,7 @@ module myCPU (
     );
 
     //branch predictor
-    Br_Predictor br_predictor_inst (
+    BrPredictor branch_predictor_inst (
         .cpu_rst(cpu_rst),
         .cpu_clk(cpu_clk),
         .is_B(is_B_EX_in),
@@ -595,9 +597,6 @@ module myCPU (
 );
 
 
-/* WB */
-    // Instantiate the RF_MUX module
-    //regfile writeback
 
 `ifdef RUN_TRACE
     // Debug Interface

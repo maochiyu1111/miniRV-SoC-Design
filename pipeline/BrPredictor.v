@@ -1,6 +1,6 @@
 `include "defines.vh"
 
-module Br_Predictor (
+module BrPredictor (
    input wire cpu_rst,
    input wire cpu_clk,
    input wire is_B,     //from EX
@@ -54,4 +54,4 @@ module Br_Predictor (
 
    assign pre_br = current_state[1];
 
-endmodule //Br_Predictor
+endmodule //BrPredictor
