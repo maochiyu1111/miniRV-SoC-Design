@@ -46,7 +46,7 @@ CPU主频达 $100 \mathrm{MHz}$，功率 $0.232 \mathrm{W}$
 
 ## 3.2 冒险处理
 
-设计思路及代码可见 [冒险处理设计方案](./pipeline/Hazard.md)
+设计思路及代码可见 [冒险处理设计方案](./pipeline/HazardSolutionDesign.md)
 
 
 
