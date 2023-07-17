@@ -8,6 +8,64 @@
 
 项目的主体和主要设计为CPU，本项目分别实现了单周期CPU和经典五级流水线CPU，支持**R**型指令 `add, sub, and, or, xor, sll, srl, sra` 、**I**型指令 `addi, andi, ori, xori, slli, srli, srai, lw, jalr `；**S**型指令 `sw`、**B**型指令 `beq, bne, blt, bge` 、**U**型指令 `lui` 以及 **J** 型指令 `jal`。
 
+本项目文件结构如下
+
+```
+.
+|-- README.md
+|-- assets   (picture file)
+|-- pipeline
+|   |-- miniRV_SoC.v  (top file)
+|   |-- myCPU.v (CPU components)
+|   |-- ALU.v
+|   |-- ALUB_MUX.v
+|   |-- BMHU.v
+|   |-- BrPredictor.v
+|   |-- Controller.v
+|   |-- DHDU.v
+|   |-- ForwardU.v
+|   |-- JumpDU.v
+|   |-- NPC.v
+|   |-- NPC_Sel.v
+|   |-- PC.v
+|   |-- REG_EX_MEM.v
+|   |-- REG_ID_EX.v
+|   |-- REG_IF_ID.v
+|   |-- REG_MEM_WB.v
+|   |-- RF.v
+|   |-- RF_MUX.v
+|   |-- SEXT.v
+|   |-- Bridge.v (Bus bridge)
+|   |-- Digital_LEDs.v (peripherals)
+|   |-- LEDs.v
+|   |-- Switches.v
+|   |-- Buttons.v
+|   |-- timer.v
+|   |-- tube.v
+|   |-- defines.vh  (parameter define)
+|   `-- HazardSolutionDesign.md 
+`-- single_cycle
+    |-- miniRV_SoC.v
+    |-- myCPU.v    
+    |-- ALU.v
+    |-- ALUB_MUX.v
+    |-- NPC.v
+    |-- PC.v
+    |-- RF.v
+    |-- RF_MUX.v
+    |-- SEXT.v
+    |-- Controller.v
+    |-- Bridge.v
+    |-- Buttons.v
+    |-- Digital_LEDs.v
+    |-- LEDs.v
+    |-- Switches.v
+    |-- timer.v    
+    |-- tube.v
+    `-- defines.vh
+
+```
+
 
 
 # 2 单周期实现
